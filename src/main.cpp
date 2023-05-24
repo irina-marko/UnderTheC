@@ -165,8 +165,11 @@ int main() {
 
     // load models
     // -----------
-    Model ourModel("resources/objects/backpack/backpack.obj");
+    Model ourModel("resources/objects/fish/Puffer Fish.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
+  //  Model starFishModel("resources/objects/sfish/Starfish-obj.obj");
+
+  //  starFishModel.SetShaderTextureNamePrefix("material.");
 
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
@@ -225,9 +228,16 @@ int main() {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model,
                                programState->backpackPosition); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(programState->backpackScale));    // it's a bit too big for our scene, so scale it down
+        model = glm::scale(model, glm::vec3(0.1f,0.1f,0.1f));    // it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
+
+      // glm::mat4 sfish = glm::mat4(1.0f);
+     //   sfish = glm::translate(sfish,
+    //                           glm::vec3(10.0f,10.0f,5.0f));// translate it down so it's at the center of the scene
+    //    sfish = glm::scale(sfish, glm::vec3(0.2f,0.2,0.1f));    // it's a bit too big for our scene, so scale it down
+    //    ourShader.setMat4("model", sfish);
+    //    starFishModel.Draw(ourShader);
 
         if (programState->ImGuiEnabled)
             DrawImGui(programState);
@@ -336,7 +346,7 @@ void DrawImGui(ProgramState *programState) {
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_F1 && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_H && action == GLFW_PRESS) {
         programState->ImGuiEnabled = !programState->ImGuiEnabled;
         if (programState->ImGuiEnabled) {
             programState->CameraMouseMovementUpdateEnabled = false;
