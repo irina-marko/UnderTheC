@@ -130,7 +130,8 @@ int main() {
     glfwSetKeyCallback(window, key_callback);
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwWindowHint(GLFW_DEPTH_BITS, 24);
+    glfwWindowHint(GLFW_DEPTH_BITS, 64); // Request a 32-bit depth buffer
+
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -161,23 +162,28 @@ int main() {
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+   // glEnable(GL_CULL_FACE);
+   // glCullFace(GL_FRONT);
 
 
 
     // build and compile shaders
-    // -------------------------
+    // -------------------------SHADERI------------------------------------
     //Shader ourShader("resources/shaders/advanced.vs", "resources/shaders/advanced.fs");
     Shader ourShader("resources/shaders/model_lighting.vs", "resources/shaders/model_lighting.fs");
     Shader seaboxShader("resources/shaders/seabox.vs", "resources/shaders/seabox.fs");
-    // load models
-    // -----------
+
+  //------------------------modeli------------------------------------------------------------------------------
     Model ourModel("resources/objects/fish/Puffer Fish.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
+
+    Model ourModel2("resources/objects/fish2/fish2.obj");
+    ourModel2.SetShaderTextureNamePrefix("material.");
+
+    Model ourModel1("resources/objects/fish1/fish1.obj");
+    ourModel2.SetShaderTextureNamePrefix("material.");
 
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(10.0,10.0,10.0);
@@ -310,13 +316,45 @@ int main() {
 
         // render the loaded model
 
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model,
-                               programState->backpackPosition); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(programState->backpackScale));    // it's a bit too big for our scene, so scale it down
+
+       // -----main puff fish----
+
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(1.0f, 1.0f);
+        //glDisable(GL_CULL_FACE);
+        glm::mat4  model = glm::mat4 (1.0f);
+        model = glm::translate(model, programState->backpackPosition);
+        model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(programState->backpackScale));
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
+        //glEnable(GL_CULL_FACE);
+        glDisable(GL_POLYGON_OFFSET_FILL);
 
+
+        //-----------------------fish1---------------
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(1.0f, 1.0f);
+        model = glm::mat4 (1.0f);
+        model = glm::translate(model, programState->backpackPosition+ glm::vec3(10.2f, 2.0f, 1.0f));
+        model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(programState->backpackScale));
+        ourShader.setMat4("model", model);
+        ourModel1.Draw(ourShader);
+        glDisable(GL_POLYGON_OFFSET_FILL);
+
+
+
+       //-----------------------fish2---------------
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(1.0f, 1.0f);
+        model = glm::mat4 (1.0f);
+        model = glm::translate(model, programState->backpackPosition +  glm::vec3(3.2f, 10.0f, 1.0f));
+        model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(programState->backpackScale));
+        ourShader.setMat4("model", model);
+        ourModel2.Draw(ourShader);
+        glDisable(GL_POLYGON_OFFSET_FILL);
 
 
 
@@ -327,7 +365,7 @@ int main() {
         view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix()));
         seaboxShader.setMat4("view", view);
         seaboxShader.setMat4("projection", projection);
-        // seabox cube
+        // ------------seabox cube----------
         glBindVertexArray(seaboxVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
