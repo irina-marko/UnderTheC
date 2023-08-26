@@ -130,6 +130,7 @@ int main() {
     glfwSetKeyCallback(window, key_callback);
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwWindowHint(GLFW_DEPTH_BITS, 24);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -167,17 +168,19 @@ int main() {
     glCullFace(GL_BACK);
 
 
+
     // build and compile shaders
     // -------------------------
-    Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
-    Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
+    //Shader ourShader("resources/shaders/advanced.vs", "resources/shaders/advanced.fs");
+    Shader ourShader("resources/shaders/model_lighting.vs", "resources/shaders/model_lighting.fs");
+    Shader seaboxShader("resources/shaders/seabox.vs", "resources/shaders/seabox.fs");
     // load models
     // -----------
     Model ourModel("resources/objects/fish/Puffer Fish.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
 
     PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
+    pointLight.position = glm::vec3(10.0,10.0,10.0);
     pointLight.ambient = glm::vec3(1.1, 1.1, 1.1);
     pointLight.diffuse = glm::vec3(1.6, 1.6, 1.6);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
@@ -187,9 +190,9 @@ int main() {
     pointLight.quadratic = 0.032f;
 
 
-    //skybox
+    //seabox
 
-    float skyboxVertices[] = {
+    float seaboxVertices[] = {
             // positions
             -1.0f,  1.0f, -1.0f,
             -1.0f, -1.0f, -1.0f,
@@ -233,16 +236,16 @@ int main() {
             -1.0f, -1.0f,  1.0f,
             1.0f, -1.0f,  1.0f
     };
-    //______________________________________skybox VAO_________________________________________________________
-    unsigned int skyboxVAO, skyboxVBO;
-    glGenVertexArrays(1, &skyboxVAO);
-    glGenBuffers(1, &skyboxVBO);
-    glBindVertexArray(skyboxVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    //______________________________________seabox VAO_________________________________________________________
+    unsigned int seaboxVAO, seaboxVBO;
+    glGenVertexArrays(1, &seaboxVAO);
+    glGenBuffers(1, &seaboxVBO);
+    glBindVertexArray(seaboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, seaboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(seaboxVertices), &seaboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    // ______________________________________load textures for skybox________________________________________________________
+    // ______________________________________load textures for seabox________________________________________________________
     vector<std::string> faces =
             {
 
@@ -256,8 +259,8 @@ int main() {
 
     unsigned int cubemapTexture = loadCubemap(faces);
 
-    skyboxShader.use();
-    skyboxShader.setInt("skybox", 0);
+    seaboxShader.use();
+    seaboxShader.setInt("seabox", 0);
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -294,6 +297,10 @@ int main() {
         ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
+        ourShader.setVec3("dirLight.direction", glm::vec3(-0.547f, -0.727f, 0.415f));
+        ourShader.setVec3("dirLight.ambient", glm::vec3(0.35f));
+        ourShader.setVec3("dirLight.diffuse", glm::vec3(0.4f));
+        ourShader.setVec3("dirLight.specular", glm::vec3(0.2f));
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
@@ -312,24 +319,26 @@ int main() {
 
 
 
-        if (programState->ImGuiEnabled)
-            DrawImGui(programState);
 
 
+        glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
-        skyboxShader.use();
+        seaboxShader.use();
         view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix()));
-        skyboxShader.setMat4("view", view);
-        skyboxShader.setMat4("projection", projection);
-        // skybox cube
-        glBindVertexArray(skyboxVAO);
+        seaboxShader.setMat4("view", view);
+        seaboxShader.setMat4("projection", projection);
+        // seabox cube
+        glBindVertexArray(seaboxVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
+        glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
 
 
+        if (programState->ImGuiEnabled)
+            DrawImGui(programState);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
