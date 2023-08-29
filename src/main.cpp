@@ -13,6 +13,9 @@
 #include <learnopengl/shader.h>
 #include <learnopengl/camera.h>
 #include <learnopengl/model.h>
+#include <cstdlib>
+#include <ctime>
+
 unsigned int loadCubemap(vector<std::string> faces);
 
 #include <iostream>
@@ -61,7 +64,7 @@ struct ProgramState {
     float backpackScale = 1.0f;
     PointLight pointLight;
     ProgramState()
-            : camera(glm::vec3(0.0f, 0.0f, 3.0f)) {}
+        : camera(glm::vec3(0.0f, 0.0f, 3.0f)) {}
 
     void SaveToFile(std::string filename);
 
@@ -86,15 +89,15 @@ void ProgramState::LoadFromFile(std::string filename) {
     std::ifstream in(filename);
     if (in) {
         in >> clearColor.r
-           >> clearColor.g
-           >> clearColor.b
-           >> ImGuiEnabled
-           >> camera.Position.x
-           >> camera.Position.y
-           >> camera.Position.z
-           >> camera.Front.x
-           >> camera.Front.y
-           >> camera.Front.z;
+                >> clearColor.g
+                >> clearColor.b
+                >> ImGuiEnabled
+                >> camera.Position.x
+                >> camera.Position.y
+                >> camera.Position.z
+                >> camera.Front.x
+                >> camera.Front.y
+                >> camera.Front.z;
     }
 }
 
@@ -175,15 +178,15 @@ int main() {
     Shader ourShader("resources/shaders/model_lighting.vs", "resources/shaders/model_lighting.fs");
     Shader seaboxShader("resources/shaders/seabox.vs", "resources/shaders/seabox.fs");
 
-  //------------------------modeli------------------------------------------------------------------------------
+    //------------------------modeli------------------------------------------------------------------------------
     Model ourModel("resources/objects/fish/Puffer Fish.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
-
+    Model ourModel1("resources/objects/fish1/fish.obj");
+    ourModel1.SetShaderTextureNamePrefix("material.");
     Model ourModel2("resources/objects/fish2/fish2.obj");
     ourModel2.SetShaderTextureNamePrefix("material.");
 
-    Model ourModel1("resources/objects/fish1/fish1.obj");
-    ourModel2.SetShaderTextureNamePrefix("material.");
+
 
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(10.0,10.0,10.0);
@@ -194,6 +197,8 @@ int main() {
     pointLight.constant = 1.0f;
     pointLight.linear = 0.09f;
     pointLight.quadratic = 0.032f;
+
+
 
 
     //seabox
@@ -271,6 +276,32 @@ int main() {
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    std::vector<glm::mat4> fishTransforms;
+
+    srand(static_cast<unsigned int>(time(nullptr)));
+    // Populate fish transformations
+    int numFish =50;
+    float maxXPosition =100.0f;
+    float maxYPosition=100.0f;
+    float maxZPosition =100.0f;
+    for (int i = 0; i < numFish; ++i) {
+        float xPos = static_cast<float>(rand()) / (RAND_MAX / maxXPosition);
+        float yPos = static_cast<float>(rand()) / (RAND_MAX / maxYPosition);
+        float zPos = static_cast<float>(rand()) / (RAND_MAX / maxZPosition);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(xPos, yPos, zPos));
+        // You can apply additional transformations here if needed
+        fishTransforms.push_back(model);
+    }
+    float fishAmplitude = 1.0f;       // Amplitude of the oscillating movement
+    float fishSpeed = 2.0f;           // Speed of fish movement
+    float fishRandomOffsetRange = 0.5f; // Range of random offset for x-axis movement
+    float initialYPos = -5.0f;
+    float phaseOffset = 0.5f;
+
+
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -292,8 +323,8 @@ int main() {
 
         // don't forget to enable shader before setting uniforms
         ourShader.use();
-        pointLight.position = glm::vec3(4.0, 4.0f, 0.0f);
-       // pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
+       // pointLight.position = glm::vec3(4.0, 4.0f, 0.0f);
+        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
         ourShader.setVec3("pointLight.position", pointLight.position);
         ourShader.setVec3("pointLight.ambient", pointLight.ambient);
         ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
@@ -309,27 +340,35 @@ int main() {
         ourShader.setVec3("dirLight.specular", glm::vec3(0.2f));
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
-                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = programState->camera.GetViewMatrix();
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
 
         // render the loaded model
 
+        for (int i = 0; i < numFish; i++) {
+            // Apply sinusoidal movement to yPos
+            fishTransforms[i] = glm::translate(glm::mat4(1.0f), glm::vec3(fishTransforms[i][3][0], initialYPos + fishAmplitude * sin(currentFrame * fishSpeed + i * phaseOffset), fishTransforms[i][3][2]));
 
-       // -----main puff fish----
+            // Apply random offset to xPos for horizontal movement
+            float randomOffset = fishRandomOffsetRange * ((rand() % 100) / 100.0f - 0.5f);
+            fishTransforms[i] = glm::translate(fishTransforms[i], glm::vec3(randomOffset * deltaTime * fishSpeed, 0.0f, 0.0f));
+        }
+
+        // -----main puff fish----
 
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0f, 1.0f);
         //glDisable(GL_CULL_FACE);
         glm::mat4  model = glm::mat4 (1.0f);
         model = glm::translate(model, programState->backpackPosition);
-        //float cf = glfwGetTime();
+
         float rotationAngle = glm::radians(currentFrame * 2); // Adjust rotationSpeed
         model = glm::rotate(model, rotationAngle, glm::vec3(1.0f, 0.0f, 0.0f));
 
-       // model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(programState->backpackScale));
+        // model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(programState->backpackScale*0.5));
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
         //glEnable(GL_CULL_FACE);
@@ -339,25 +378,42 @@ int main() {
         //-----------------------fish1---------------
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0f, 1.0f);
-        model = glm::mat4 (1.0f);
-        model = glm::translate(model, programState->backpackPosition+ glm::vec3(10.2f, 2.0f, 1.0f));
-        model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(programState->backpackScale));
-        ourShader.setMat4("model", model);
-        ourModel1.Draw(ourShader);
+       // model = glm::mat4 (1.0f);
+        //model = glm::translate(model, programState->backpackPosition+ glm::vec3(10.2f, 2.0f, 1.0f));
+        //model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+      //  model = glm::scale(model, glm::vec3(programState->backpackScale));
+       // ourShader.setMat4("model", model);
+      ///  ourModel1.Draw(ourShader);
+  /*
+        for (const glm::mat4& model : fishTransforms)
+        {ourShader.setMat4("model", model);
+            ourModel1.Draw(ourShader);
+
+
+       }
+       */
         glDisable(GL_POLYGON_OFFSET_FILL);
 
 
 
-       //-----------------------fish2---------------
+
+
+        //-----------------------fish2---------------
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0f, 1.0f);
-        model = glm::mat4 (1.0f);
-        model = glm::translate(model, programState->backpackPosition +  glm::vec3(3.2f, 10.0f, 1.0f));
-        model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(programState->backpackScale));
-        ourShader.setMat4("model", model);
-        ourModel2.Draw(ourShader);
+      //  model = glm::mat4 (1.0f);
+      //  model = glm::translate(model, programState->backpackPosition +  glm::vec3(3.2f, 10.0f, 1.0f));
+      //  model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+      //  model = glm::scale(model, glm::vec3(programState->backpackScale));
+      //  ourShader.setMat4("model", model);
+       // ourModel2.Draw(ourShader);
+        for (const glm::mat4& model : fishTransforms) {
+
+
+            // Set the transformed model matrix and draw the fish
+            ourShader.setMat4("model", model);
+            ourModel2.Draw(ourShader);
+        }
         glDisable(GL_POLYGON_OFFSET_FILL);
 
 
