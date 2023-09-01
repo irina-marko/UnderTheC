@@ -321,9 +321,10 @@ int main() {
         glClearColor(programState->clearColor.r, programState->clearColor.g, programState->clearColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        float shininess = 100;
         // don't forget to enable shader before setting uniforms
         ourShader.use();
-       // pointLight.position = glm::vec3(4.0, 4.0f, 0.0f);
+        // pointLight.position = glm::vec3(4.0, 4.0f, 0.0f);
         pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
         ourShader.setVec3("pointLight.position", pointLight.position);
         ourShader.setVec3("pointLight.ambient", pointLight.ambient);
@@ -334,6 +335,9 @@ int main() {
         ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
+        ourShader.setFloat("material.shininess", shininess); // Set the shininess of the material
+        ourShader.setInt("material.texture_diffuse1", 0);    //
+        ourShader.setInt("material.texture_specular1", 1);
         ourShader.setVec3("dirLight.direction", glm::vec3(-0.547f, -0.727f, 0.415f));
         ourShader.setVec3("dirLight.ambient", glm::vec3(0.35f));
         ourShader.setVec3("dirLight.diffuse", glm::vec3(0.4f));
@@ -349,8 +353,9 @@ int main() {
 
         for (int i = 0; i < numFish; i++) {
             // Apply sinusoidal movement to yPos
-            fishTransforms[i] = glm::translate(glm::mat4(1.0f), glm::vec3(fishTransforms[i][3][0], initialYPos + fishAmplitude * sin(currentFrame * fishSpeed + i * phaseOffset), fishTransforms[i][3][2]));
 
+            fishTransforms[i] = glm::translate(glm::mat4(1.0f), glm::vec3(fishTransforms[i][3][0], initialYPos + fishAmplitude * sin(currentFrame * fishSpeed + i * phaseOffset), fishTransforms[i][3][2]));
+            fishTransforms[i] = glm::rotate(fishTransforms[i], glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
             // Apply random offset to xPos for horizontal movement
             float randomOffset = fishRandomOffsetRange * ((rand() % 100) / 100.0f - 0.5f);
             fishTransforms[i] = glm::translate(fishTransforms[i], glm::vec3(randomOffset * deltaTime * fishSpeed, 0.0f, 0.0f));
@@ -362,10 +367,12 @@ int main() {
         glPolygonOffset(1.0f, 1.0f);
         //glDisable(GL_CULL_FACE);
         glm::mat4  model = glm::mat4 (1.0f);
+
         model = glm::translate(model, programState->backpackPosition);
 
         float rotationAngle = glm::radians(currentFrame * 2); // Adjust rotationSpeed
-        model = glm::rotate(model, rotationAngle, glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+
 
         // model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(programState->backpackScale*0.5));
@@ -378,13 +385,8 @@ int main() {
         //-----------------------fish1---------------
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0f, 1.0f);
-       // model = glm::mat4 (1.0f);
-        //model = glm::translate(model, programState->backpackPosition+ glm::vec3(10.2f, 2.0f, 1.0f));
-        //model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-      //  model = glm::scale(model, glm::vec3(programState->backpackScale));
-       // ourShader.setMat4("model", model);
-      ///  ourModel1.Draw(ourShader);
-  /*
+
+/*
         for (const glm::mat4& model : fishTransforms)
         {ourShader.setMat4("model", model);
             ourModel1.Draw(ourShader);
@@ -392,25 +394,15 @@ int main() {
 
        }
        */
+
         glDisable(GL_POLYGON_OFFSET_FILL);
-
-
-
 
 
         //-----------------------fish2---------------
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0f, 1.0f);
-      //  model = glm::mat4 (1.0f);
-      //  model = glm::translate(model, programState->backpackPosition +  glm::vec3(3.2f, 10.0f, 1.0f));
-      //  model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-      //  model = glm::scale(model, glm::vec3(programState->backpackScale));
-      //  ourShader.setMat4("model", model);
-       // ourModel2.Draw(ourShader);
         for (const glm::mat4& model : fishTransforms) {
 
-
-            // Set the transformed model matrix and draw the fish
             ourShader.setMat4("model", model);
             ourModel2.Draw(ourShader);
         }
