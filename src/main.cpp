@@ -185,6 +185,8 @@ int main() {
     ourModel1.SetShaderTextureNamePrefix("material.");
     Model ourModel2("resources/objects/fish2/fish2.obj");
     ourModel2.SetShaderTextureNamePrefix("material.");
+    Model ourModelBass("resources/objects/bass/bass.obj");
+    ourModelBass.SetShaderTextureNamePrefix("material.");
 
 
 
@@ -277,13 +279,14 @@ int main() {
    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     std::vector<glm::mat4> fishTransforms;
+    std::vector<glm::mat4> fishTransforms1;
 
     srand(static_cast<unsigned int>(time(nullptr)));
     // Populate fish transformations
     int numFish =100;
-    float maxXPosition =100.0f;
-    float maxYPosition=100.0f;
-    float maxZPosition =100.0f;
+    float maxXPosition =150.0f;
+    float maxYPosition=150.0f;
+    float maxZPosition =150.0f;
     for (int i = 0; i < numFish; ++i) {
         float xPos = static_cast<float>(rand()) / (RAND_MAX / maxXPosition);
         float yPos = static_cast<float>(rand()) / (RAND_MAX / maxYPosition);
@@ -293,6 +296,20 @@ int main() {
         model = glm::translate(model, glm::vec3(xPos, yPos, zPos));
         // You can apply additional transformations here if needed
         fishTransforms.push_back(model);
+    }
+     maxXPosition =150.0f;
+     maxYPosition=150.0f;
+     maxZPosition =150.0f;
+    for (int i = 0; i < numFish; ++i) {
+        float xPos = static_cast<float>(rand()) / (RAND_MAX / maxXPosition);
+        float yPos = static_cast<float>(rand()) / (RAND_MAX / maxYPosition);
+        float zPos = static_cast<float>(rand()) / (RAND_MAX / maxZPosition);
+        xPos = xPos + 30.0f;
+        yPos = yPos + 100.0f;
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(xPos, yPos, zPos));
+        // You can apply additional transformations here if needed
+        fishTransforms1.push_back(model);
     }
     float fishAmplitude = 1.0f;       // Amplitude of the oscillating movement
     float fishSpeed = 2.0f;           // Speed of fish movement
@@ -314,7 +331,12 @@ int main() {
         // input
         // -----
         processInput(window);
-
+        std::sort(fishTransforms.begin(), fishTransforms.end(), [](const glm::mat4& a, const glm::mat4& b) {
+            return a[3][2] < b[3][2];
+        });
+        std::sort(fishTransforms1.begin(), fishTransforms1.end(), [](const glm::mat4& a, const glm::mat4& b) {
+            return a[3][2] < b[3][2];
+        });
 
         // render
         // ------
@@ -360,6 +382,15 @@ int main() {
             float randomOffset = fishRandomOffsetRange * ((rand() % 100) / 100.0f - 0.5f);
             fishTransforms[i] = glm::translate(fishTransforms[i], glm::vec3(randomOffset * deltaTime * fishSpeed, 0.0f, 0.0f));
         }
+        for (int i = 0; i < numFish; ++i) {
+            // Apply sinusoidal movement to yPos
+
+            fishTransforms1[i] = glm::translate(glm::mat4(1.0f), glm::vec3(fishTransforms1[i][3][0], initialYPos + fishAmplitude * sin(currentFrame * fishSpeed + i * phaseOffset), fishTransforms1[i][3][2]));
+            fishTransforms1[i] = glm::rotate(fishTransforms1[i], glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            // Apply random offset to xPos for horizontal movement
+            float randomOffset = fishRandomOffsetRange * ((rand() % 100) / 100.0f - 0.5f);
+            fishTransforms1[i] = glm::translate(fishTransforms1[i], glm::vec3(randomOffset * deltaTime * fishSpeed, 0.0f, 0.0f));
+        }
 
         // -----main puff fish----
 
@@ -379,15 +410,9 @@ int main() {
         glDisable(GL_POLYGON_OFFSET_FILL);
 
 
-        //-----------------------fish1---------------
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(1.0f, 1.0f);
 
 
-        glDisable(GL_POLYGON_OFFSET_FILL);
-
-
-        //-----------------------fish2---------------
+        //-----------------------fish--------------
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0f, 1.0f);
         for (const glm::mat4& model : fishTransforms) {
@@ -397,8 +422,30 @@ int main() {
         }
         glDisable(GL_POLYGON_OFFSET_FILL);
 
+        //---------------------bass---------------------
+
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(1.0f, 1.0f);
+        for (const glm::mat4& model : fishTransforms1) {
+
+            ourShader.setMat4("model", model);
+            ourModelBass.Draw(ourShader);
+        }
+        glDisable(GL_POLYGON_OFFSET_FILL);
 
 
+        /*
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, programState->backpackPosition + glm::vec3(20.0f,20.0f,10.0f));
+       // model = glm::scale(model, glm::vec3(0.003f));
+        model = glm::rotate(model,glm::radians(currentFrame*20), glm::vec3(0.0f ,1.0f, 0.0f));
+        ourShader.setMat4("model", model);
+
+            ourShader.setMat4("model", model);
+            ourModelBass.Draw(ourShader);
+*/
+
+            glDisable(GL_POLYGON_OFFSET_FILL);
 
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
