@@ -274,13 +274,13 @@ int main() {
     seaboxShader.setInt("seabox", 0);
 
     // draw in wireframe
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     std::vector<glm::mat4> fishTransforms;
 
     srand(static_cast<unsigned int>(time(nullptr)));
     // Populate fish transformations
-    int numFish =50;
+    int numFish =100;
     float maxXPosition =100.0f;
     float maxYPosition=100.0f;
     float maxZPosition =100.0f;
@@ -351,7 +351,7 @@ int main() {
 
         // render the loaded model
 
-        for (int i = 0; i < numFish; i++) {
+        for (int i = 0; i < numFish; ++i) {
             // Apply sinusoidal movement to yPos
 
             fishTransforms[i] = glm::translate(glm::mat4(1.0f), glm::vec3(fishTransforms[i][3][0], initialYPos + fishAmplitude * sin(currentFrame * fishSpeed + i * phaseOffset), fishTransforms[i][3][2]));
@@ -365,20 +365,17 @@ int main() {
 
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0f, 1.0f);
-        //glDisable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
         glm::mat4  model = glm::mat4 (1.0f);
 
         model = glm::translate(model, programState->backpackPosition);
 
         float rotationAngle = glm::radians(currentFrame * 2); // Adjust rotationSpeed
         model = glm::rotate(model, rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
-
-
-        // model= glm::rotate(model, glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(programState->backpackScale*0.5));
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
-        //glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
         glDisable(GL_POLYGON_OFFSET_FILL);
 
 
@@ -386,14 +383,6 @@ int main() {
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0f, 1.0f);
 
-/*
-        for (const glm::mat4& model : fishTransforms)
-        {ourShader.setMat4("model", model);
-            ourModel1.Draw(ourShader);
-
-
-       }
-       */
 
         glDisable(GL_POLYGON_OFFSET_FILL);
 
