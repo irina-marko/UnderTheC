@@ -11,4 +11,5 @@ Prazan projekat sa pratećim bibliotekama koje koristimo na času.
 7. ALT+SHIFT+F10 -> project_base -> run
 
 
-Video : https://youtu.be/oI7k-_DwRWU
+Video : https://www.youtube.com/watch?v=6Se-ztrJyE8
+
